@@ -15,7 +15,7 @@ export const createSubscriptionSchema = Joi.object({
     .valid("active", "cancelled", "expired")
     .optional(),
 
-  user: Joi.string().hex().length(24).required(),
+  user: Joi.string().hex().length(24),
 });
 
 export const updateSubscriptionSchema = Joi.object({
