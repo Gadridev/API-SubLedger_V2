@@ -11,7 +11,7 @@ const subscriptionSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: [true, "Price is required"],
-      min: [0, "Price must be positive"],
+      min: [1, "Price must be positive"],
     },
 
     billingCycle: {
@@ -23,7 +23,14 @@ const subscriptionSchema = new mongoose.Schema(
     startDate: {
       type: Date,
       required: [true, "Start date is required"],
-    },   
+    },
+
+    status: {
+      type: String,
+      enum: ["active", "cancelled"],
+      default: "active",
+    },
+
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",

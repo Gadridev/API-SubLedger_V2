@@ -2,11 +2,14 @@ import express from "express";
 import userRouter from "./routes/userRoute.js";
 import subscriptionRouter from "./routes/subscriptionRoute.js";
 import authRouter from "./routes/authRoute.js";
+import transactionRouter from "./routes/transactionRoute.js";
 import ErrorMiddleware from "./middleware/ErrorMidlleware.js";
 const app = express();
 app.use(express.json());
-app.use(ErrorMiddleware);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/subscription", subscriptionRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/transactions", transactionRouter);
+
+app.use(ErrorMiddleware);
 export default app;

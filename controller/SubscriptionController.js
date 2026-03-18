@@ -1,14 +1,26 @@
 import Subscription from "../model/Subscription.js";
 import AppError from "../utils/AppError.js";
 
-export async function getAllSubscriptions(req, res, next) {
+export async function getSubscriptions(req, res, next) {
   try {
-    const subscriptions = await Subscription.find();
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (req.query.status) filter.status = req.query.status;
+    if (req.query.subscriptionId) filter._id = req.query.subscriptionId;
+    if (req.query.startDate) filter.startDate = { $gte: new Date(req.query.startDate) };
+
+    const subscriptions = await Subscription.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+        
+    const total = await Subscription.countDocuments(filter);
 
     res.status(200).json({
-      status: "success",
-      results: subscriptions.length,
-      data: subscriptions,
+      status: "success",page,totalPages: Math.ceil(total / limit),results: subscriptions.length,data: { subscriptions },
     });
   } catch (err) {
     next(err);
@@ -80,6 +92,35 @@ export async function deleteSubscription(req, res, next) {
     res.status(204).json({
       status: "success",
       data: null,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function cancelSubscription(req, res, next) {
+  try {
+    // Find the subscription by ID
+    const subscription = await Subscription.findById(req.params.id);
+    // If subscription not found, return 404 error
+    if (!subscription) {
+      return next(new AppError("Subscription not found", 404));
+    }
+   // Check if the authenticated user is the owner of the subscription
+    if (subscription.user.toString() !== req.user.id) {
+      return next(new AppError("You are not the owner", 403));
+    }
+// If subscription is already cancelled, return 400 error
+    if (subscription.status === "cancelled") {
+      return next(new AppError("Subscription is already cancelled", 400));
+    }
+    // Update the subscription status to "cancelled"
+    subscription.status = "cancelled";
+    await subscription.save();
+    // Return the updated subscription
+    res.status(200).json({
+      status: "success",
+      data: { subscription },
     });
   } catch (err) {
     next(err);
